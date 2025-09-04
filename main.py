@@ -98,18 +98,18 @@ class ImageWorkflow:
 
 
 @register(
-    "astrbot_plugin_figurine_workshop",
-    "长安某",
-    "使用 Gemini API 将图片手办化",
+    "astrbot_plugin_figmorph",
+    "AsZer0s",
+    "使用 Gemini API & OpenAI API 将图片手办化",
     "1.0.0",
 )
-class LMArenaPlugin(Star):
+class FigmorphPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.conf = config
         self.save_image = config.get("save_image", False)
         self.plugin_data_dir = StarTools.get_data_dir(
-            "astrbot_plugin_figurine_workshop"
+            "astrbot_plugin_figmorph"
         )
         self.api_keys = self.conf.get("gemini_api_keys", [])
         self.current_key_index = 0
@@ -119,7 +119,7 @@ class LMArenaPlugin(Star):
         self.figurine_style = self.conf.get("figurine_style", "deluxe_box")
         self.model_name = self.conf.get("model_name", "gemini-2.0-flash-preview-image-generation")
         if not self.api_keys:
-            logger.error("LMArenaPlugin: 未配置任何 Gemini API 密钥")
+            logger.error("FigmorphPlugin: 未配置任何 Gemini API 密钥")
 
     async def initialize(self):
         self.iwf = ImageWorkflow()
@@ -135,7 +135,7 @@ class LMArenaPlugin(Star):
             r"^(手办化)\s*", "", event.message_obj.message_str, count=1
         ).strip()
         yield event.plain_result(
-            f"正在生成 [{self.figurine_style}] 风格手办，请稍等..."
+            f"正在生成 [{self.figurine_style}] 风格图变手办，请稍等..."
         )
         res = await self._generate_figurine_with_gemini(img_bytes, user_prompt)
 
@@ -144,7 +144,7 @@ class LMArenaPlugin(Star):
             if self.save_image:
                 save_path = (
                     self.plugin_data_dir
-                    / f"gemini_{self.figurine_style}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.png"
+                    / f"figmorph_{self.figurine_style}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.png"
                 )
 
                 def write_file():
@@ -167,7 +167,7 @@ class LMArenaPlugin(Star):
 
         if not base_prompt:
             error_msg = (
-                f"配置错误：未能在配置文件中找到名为 '{self.figurine_style}' 的提示词。"
+                f"配置错误：未能在配置文件中找到名为 '{self.figurine_style}' 的图变手办提示词。"
             )
             logger.error(error_msg)
             return error_msg
@@ -177,7 +177,7 @@ class LMArenaPlugin(Star):
             if user_prompt
             else base_prompt
         )
-        logger.info(f"Gemini 手办化 Prompt ({self.figurine_style}): {final_prompt}")
+        logger.info(f"图变手办提示词 ({self.figurine_style}): {final_prompt}")
 
         async def edit_operation(api_key):
             model_name = self.model_name
@@ -204,7 +204,7 @@ class LMArenaPlugin(Star):
 
         image_data = await self._with_retry(edit_operation)
         if not image_data:
-            return "所有API密钥均尝试失败"
+            return "所有API密钥均尝试失败，请检查配置"
         return image_data
 
     def _get_current_key(self):
@@ -216,7 +216,7 @@ class LMArenaPlugin(Star):
         if not self.api_keys:
             return
         self.current_key_index = (self.current_key_index + 1) % len(self.api_keys)
-        logger.info(f"切换到下一个 Gemini API 密钥（索引：{self.current_key_index}）")
+        logger.info(f"切换到下一个 API 密钥（索引：{self.current_key_index}）")
 
     async def _send_image_request(self, model_name, payload, api_key):
         base_url = self.api_base_url.strip().removesuffix("/")
@@ -231,7 +231,7 @@ class LMArenaPlugin(Star):
             if response.status != 200:
                 response_text = await response.text()
                 logger.error(
-                    f"API请求失败: HTTP {response.status}, 响应: {response_text}"
+                    f"API请求失败: HTTP {response.status}, 响应: {response_text}, 密钥: {api_key}"
                 )
                 response.raise_for_status()
             data = await response.json()
@@ -256,7 +256,7 @@ class LMArenaPlugin(Star):
         for attempt in range(max_attempts):
             current_key = self._get_current_key()
             logger.info(
-                f"尝试操作（密钥索引：{self.current_key_index}，次数：{attempt + 1}/{max_attempts}）"
+                f"尝试操作（密钥索引：{self.current_key_index}，次数：{attempt + 1}/{max_attempts}，密钥：{current_key}）"
             )
             try:
                 return await operation(current_key, *args, **kwargs)
@@ -265,10 +265,10 @@ class LMArenaPlugin(Star):
                 if attempt < max_attempts - 1:
                     self._switch_key()
                 else:
-                    logger.error("所有API密钥均尝试失败")
+                    logger.error("所有API密钥均尝试失败，请检查配置")
         return None
 
     async def terminate(self):
         if self.iwf:
             await self.iwf.terminate()
-            logger.info("[ImageWorkflow] session已关闭")
+            logger.info("[FigmorphPlugin] session已关闭")

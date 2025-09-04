@@ -1,52 +1,49 @@
-# 手办工坊 (Figurine Workshop)
+# 图变手办 (Figmorph)
 
-一个基于 Google Gemini API 的 AstrBot 插件，可以将任意图片一键“手办化”，生成精美的二次元手办风格图片。
+一个基于 OpenAI 接口 & Google Gemini 接口的 AstrBot 插件，可将任意图片一键“手办化”，生成高质量的二次元手办风格图像
 
-##  功能特性
+## 🔧 功能特性
 
-- **一键生成**：简单地发送“手办化”指令，即可将图片转换。
-- **多种输入方式**：支持直接发送图片、回复图片、或`@用户`来获取头像进行制作。
-- **两种可选风格**：
-  - **豪华版 (deluxe_box)**：生成带有精美商业包装盒的手办图片。
-  - **经典版 (classic)**：生成放置在桌面场景、更具真实感的手办图片。
-- **自动处理GIF**：插件会自动识别GIF动图并提取第一帧进行处理，无需用户手动转换。
-- **高度可定制**：所有用于生成图片的提示词（Prompt）都在配置文件中开放，你可以随时按自己的喜好进行微调。
-- **高可用性**：支持配置多个 Gemini API Key，当某个 Key 失效或达到速率限制时会自动切换，保证服务稳定。
+- **一键生成**：发送“手办化”指令即可完成转换，无需额外操作。
+- **多种输入方式**：支持发送图片、回复图片、或 `@用户` 获取头像进行处理。
+- **双风格支持**：
+  - `deluxe_box`：生成带商业包装盒的精美手办图。
+  - `classic`：生成桌面场景中的真实感手办图。
+- **GIF 自动处理**：自动提取 GIF 第一帧，无需手动转换。
+- **提示词可调**：所有生成提示词（Prompt）均可在配置文件中自定义，支持深度微调。
+- **多 Key 高可用**：支持配置多个 Gemini API Key，自动切换以应对失效或速率限制。
+- **自定义模型支持**: 支持用户自定义模型，以便使用自己的服务
 
-##  安装与配置
+## ⚙️ 安装与配置
 
-### 安装
+### 安装步骤
 
-1.  下载本插件的压缩包并解压。
-2.  将解压后的 `astrbot_plugin_figurine_workshop` 文件夹放入 `astrbot/plugins` 目录下。
-3.  重启 AstrBot。
+1. 下载插件压缩包并解压。
+2. 将 `astrbot_plugin_figmorph` 文件夹放入 `astrbot/plugins` 目录。
+3. 重启 AstrBot。
 
-### 配置
+### 配置项说明
 
-在 AstrBot 管理面板的 `插件管理` -> `手办工坊` 中进行配置。
+在 AstrBot 管理面板中进入 `插件管理` → `图变手办` 进行设置：
 
-| 配置项             | 类型   | 描述                                                                                                                              |
-| ------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `gemini_api_keys`  | 列表   | **（必需）** 你的 Google Gemini API 密钥。可以填写多个以提高可用性。请前往 [Google AI Studio](https://aistudio.google.com/) 获取。 |
-| `figurine_style`   | 下拉菜单 | 选择默认的生成风格，`deluxe_box`（豪华版）或 `classic`（经典版）。                                                                     |
-| `save_image`       | 开关   | 是否将每次生成的图片保存在插件的 `data` 目录中。                                                                                  |
-| `api_base_url`     | 字符串 | （可选）如果你需要使用代理，可以在此填写自定义的 API 地址。                                                                         |
-| `model_name`       | 字符串 | （可选）选择要使用的 Gemini 模型，留空则使用默认模型 `gemini-2.0-flash-preview-image-generation`。                                |
-| `prompts`          | 对象   | （高级）你可以在这里自定义 `deluxe_box` 和 `classic` 两种风格的生成提示词，以调整出图效果。                                          |
+| 配置项             | 类型     | 描述                                                                                                                              |
+|--------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `gemini_api_keys`  | 列表     | **必填**：填写一个或多个 Google Gemini API 密钥。获取地址：[Google AI Studio](https://aistudio.google.com/)                      |
+| `figurine_style`   | 下拉菜单 | 默认生成风格：`deluxe_box` 或 `classic`                                                                                           |
+| `save_image`       | 开关     | 是否将生成图像保存至插件的 `data` 目录                                                                                             |
+| `api_base_url`     | 字符串   | （可选）自定义 Gemini API 地址，适用于代理场景                                                                                     |
+| `model_name`       | 字符串   | （可选）指定使用的 Gemini 模型，留空则使用默认：`gemini-2.0-flash-preview-image-generation`                                       |
+| `prompts`          | 对象     | （高级）自定义 `deluxe_box` 与 `classic` 风格的提示词，控制图像风格与细节                                                         |
 
+## 🚀 使用方法
 
-##  使用方法
+- 发送 `手办化` 并附图。
+- 回复一张图片并发送 `手办化`。
+- 使用 `手办化 @某人` 将对方头像手办化。
 
-- **基础用法**
-  - 发送 `手办化`，然后发送一张图片。
-  - 回复一张图片，并发送 `手办化`。
-  - 发送 `手办化 @某人` 来将对方的头像手办化。
-
-
-
-## 致谢
+## 🙏 致谢
 
 插件二改自作者的插件 [**zgojin**](https://github.com/zgojin/astrbot_plugin_figurine_workshop)
 
-本插件的灵感和部分代码实现来源于原作者 [**Zhalslar**](https://github.com/Zhalslar) 的优秀插件 [**astrbot_plugin_lmarena**](https://github.com/Zhalslar/astrbot_plugin_lmarena)。
+本插件的灵感和部分代码实现来源于原作者 [**Zhalslar**](https://github.com/Zhalslar) 的优秀插件 [**astrbot_plugin_lmarena**](https://github.com/Zhalslar/astrbot_plugin_lmarena)。  
 在此表示诚挚的感谢！

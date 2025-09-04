@@ -1,5 +1,5 @@
-name: astrbot_plugin_figurine_workshop
-desc: 基于gemini生图的手办化,不再需要本地部署
-version: v1.0.2
+name: astrbot_plugin_figmorph
+desc: 基于OpenAI接口&Gemini接口生图的图变手办
+version: v1.0.0
 author: AsZer0s
-repo: https://github.com/AsZer0s/astrbot_plugin_figurine_workshop
+repo: https://github.com/AsZer0s/astrbot_plugin_figmorph

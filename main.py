@@ -101,7 +101,7 @@ class ImageWorkflow:
     "astrbot_plugin_figmorph",
     "AsZer0s",
     "使用 Gemini API & OpenAI API 将图片手办化",
-    "1.0.0",
+    "1.1.0",
 )
 class FigmorphPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -111,33 +111,61 @@ class FigmorphPlugin(Star):
         self.plugin_data_dir = StarTools.get_data_dir(
             "astrbot_plugin_figmorph"
         )
-        self.api_keys = self.conf.get("gemini_api_keys", [])
+        
+        # API类型选择
+        self.api_type = self.conf.get("api_type", "gemini")
+        
+        # 根据API类型设置相应的配置
+        if self.api_type == "gemini":
+            self.api_keys = self.conf.get("gemini_api_keys", [])
+            self.api_base_url = self.conf.get(
+                "gemini_api_base_url", "https://generativelanguage.googleapis.com"
+            )
+            self.model_name = self.conf.get("gemini_model_name", "gemini-2.0-flash-preview-image-generation")
+            if not self.api_keys:
+                logger.error("FigmorphPlugin: 未配置任何 Gemini API 密钥")
+        else:  # openai
+            self.api_keys = self.conf.get("openai_api_keys", [])
+            self.api_base_url = self.conf.get(
+                "openai_api_base_url", "https://api.openai.com"
+            )
+            self.model_name = self.conf.get("openai_model_name", "dall-e-3")
+            if not self.api_keys:
+                logger.error("FigmorphPlugin: 未配置任何 OpenAI API 密钥")
+        
         self.current_key_index = 0
-        self.api_base_url = self.conf.get(
-            "api_base_url", "https://generativelanguage.googleapis.com"
-        )
         self.figurine_style = self.conf.get("figurine_style", "deluxe_box")
-        self.model_name = self.conf.get("model_name", "gemini-2.0-flash-preview-image-generation")
-        if not self.api_keys:
-            logger.error("FigmorphPlugin: 未配置任何 Gemini API 密钥")
 
     async def initialize(self):
         self.iwf = ImageWorkflow()
 
     @filter.regex(r"^(手办化)", priority=3)
     async def on_nano(self, event: AstrMessageEvent):
-        img_bytes = await self.iwf.get_first_image(event)
-        if not img_bytes:
-            yield event.plain_result("缺少图片参数（可以发送图片或@用户）")
-            return
-
         user_prompt = re.sub(
             r"^(手办化)\s*", "", event.message_obj.message_str, count=1
         ).strip()
-        yield event.plain_result(
-            f"正在生成 [{self.figurine_style}] 风格图变手办，请稍等..."
-        )
-        res = await self._generate_figurine_with_gemini(img_bytes, user_prompt)
+        
+        # 获取图片输入（两种API都支持）
+        img_bytes = await self.iwf.get_first_image(event)
+        
+        if self.api_type == "gemini":
+            # Gemini需要图片输入
+            if not img_bytes:
+                yield event.plain_result("缺少图片参数（可以发送图片或@用户）")
+                return
+            yield event.plain_result(
+                f"正在使用 [{self.api_type.upper()}] 生成 [{self.figurine_style}] 风格手办，请稍等..."
+            )
+            res = await self._generate_figurine_with_gemini(img_bytes, user_prompt)
+        else:
+            # OpenAI支持图片输入（gpt-image-1）和纯文字生成（dall-e-3）
+            if not img_bytes and not user_prompt:
+                yield event.plain_result("请提供图片或描述您想要手办化的内容（例如：手办化 一只可爱的小猫）")
+                return
+            yield event.plain_result(
+                f"正在使用 [{self.api_type.upper()}] 生成 [{self.figurine_style}] 风格手办，请稍等..."
+            )
+            res = await self._generate_figurine_with_openai(img_bytes, user_prompt)
 
         if isinstance(res, bytes):
             yield event.chain_result([Image.fromBytes(res)])
@@ -207,6 +235,48 @@ class FigmorphPlugin(Star):
             return "所有API密钥均尝试失败，请检查配置"
         return image_data
 
+    async def _generate_figurine_with_openai(
+        self, image_bytes: bytes | None, user_prompt: str
+    ) -> bytes | str | None:
+        prompts_config = self.conf.get("prompts", {})
+        base_prompt = prompts_config.get(self.figurine_style)
+
+        if not base_prompt:
+            error_msg = (
+                f"配置错误：未能在配置文件中找到名为 '{self.figurine_style}' 的手办化提示词。"
+            )
+            logger.error(error_msg)
+            return error_msg
+
+        final_prompt = (
+            f"{base_prompt}\n\nAdditional user requirements from user: {user_prompt}"
+            if user_prompt
+            else base_prompt
+        )
+        logger.info(f"OpenAI 手办化提示词 ({self.figurine_style}): {final_prompt}")
+
+        async def edit_operation(api_key):
+            model_name = self.model_name
+            
+            if model_name == "gpt-image-1" and image_bytes:
+                return await self._send_openai_image_to_image_request(model_name, final_prompt, image_bytes, api_key)
+            else:
+                payload = {
+                    "model": model_name,
+                    "prompt": final_prompt,
+                    "n": 1,
+                    "size": "1024x1024",
+                    "quality": "hd",
+                    "response_format": "b64_json",
+                    "style": "vivid"
+                }
+                return await self._send_openai_request(model_name, payload, api_key)
+
+        image_data = await self._with_retry(edit_operation)
+        if not image_data:
+            return "所有API密钥均尝试失败，请检查配置"
+        return image_data
+
     def _get_current_key(self):
         if not self.api_keys:
             return None
@@ -245,6 +315,80 @@ class FigmorphPlugin(Star):
             for part in data["candidates"][0]["content"]["parts"]:
                 if "inlineData" in part and "data" in part["inlineData"]:
                     return base64.b64decode(part["inlineData"]["data"])
+
+        raise Exception("操作成功，但未在响应中获取到图片数据")
+
+    async def _send_openai_request(self, model_name, payload, api_key):
+        base_url = self.api_base_url.strip().removesuffix("/")
+        endpoint = f"{base_url}/v1/images/generations"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+        async with self.iwf.session.post(
+            url=endpoint, json=payload, headers=headers
+        ) as response:
+            if response.status != 200:
+                response_text = await response.text()
+                logger.error(
+                    f"OpenAI API请求失败: HTTP {response.status}, 响应: {response_text}, 密钥: {api_key}"
+                )
+                response.raise_for_status()
+            data = await response.json()
+
+        if "data" in data and len(data["data"]) > 0:
+            image_data = data["data"][0].get("b64_json")
+            if image_data:
+                return base64.b64decode(image_data)
+
+        raise Exception("操作成功，但未在响应中获取到图片数据")
+
+    async def _send_openai_image_to_image_request(self, model_name, prompt, image_bytes, api_key):
+        """使用 OpenAI gpt-image-1 模型进行图生图"""
+        base_url = self.api_base_url.strip().removesuffix("/")
+        endpoint = f"{base_url}/v1/images/generations"
+        
+        # 将图片转换为base64
+        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+        
+        payload = {
+            "model": model_name,
+            "prompt": prompt,
+            "image": [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{image_base64}"
+                    }
+                }
+            ],
+            "n": 1,
+            "size": "1024x1024",
+            "quality": "hd",
+            "response_format": "b64_json"
+        }
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+        async with self.iwf.session.post(
+            url=endpoint, json=payload, headers=headers
+        ) as response:
+            if response.status != 200:
+                response_text = await response.text()
+                logger.error(
+                    f"OpenAI 图生图 API请求失败: HTTP {response.status}, 响应: {response_text}, 密钥: {api_key}"
+                )
+                response.raise_for_status()
+            data = await response.json()
+
+        if "data" in data and len(data["data"]) > 0:
+            image_data = data["data"][0].get("b64_json")
+            if image_data:
+                return base64.b64decode(image_data)
 
         raise Exception("操作成功，但未在响应中获取到图片数据")
 

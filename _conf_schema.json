@@ -1,4 +1,14 @@
 {
+    "api_type": {
+        "description": "选择使用的API接口类型",
+        "type": "string",
+        "options": [
+            "gemini",
+            "openai"
+        ],
+        "hint": "选择使用 Gemini API 或 OpenAI API 进行图片生成",
+        "default": "gemini"
+    },
     "gemini_api_keys": {
         "description": "Gemini API 密钥列表 (从 Google AI Studio 获取)",
         "type": "list",
@@ -10,17 +20,40 @@
         },
         "default": []
     },
-    "api_base_url": {
+    "openai_api_keys": {
+        "description": "OpenAI API 密钥列表 (从 OpenAI 获取)",
+        "type": "list",
+        "hint": "前往 https://platform.openai.com/ 生成 API Key，支持填写多个密钥以提高可用性",
+        "obvious_hint": true,
+        "items": {
+            "type": "string",
+            "description": "API 密钥"
+        },
+        "default": []
+    },
+    "gemini_api_base_url": {
         "description": "Gemini API 基础 URL (可选)",
         "type": "string",
-        "hint": "如果需要自定义 API 地址或使用代理，请填写完整 URL",
+        "hint": "如果需要自定义 Gemini API 地址或使用代理，请填写完整 URL",
         "default": "https://generativelanguage.googleapis.com"
     },
-    "model_name": {
+    "openai_api_base_url": {
+        "description": "OpenAI API 基础 URL (可选)",
+        "type": "string",
+        "hint": "如果需要自定义 OpenAI API 地址或使用代理，请填写完整 URL",
+        "default": "https://api.openai.com"
+    },
+    "gemini_model_name": {
         "description": "Gemini 模型名称",
         "type": "string",
         "hint": "选择要使用的 Gemini 模型，留空则使用默认模型",
         "default": "gemini-2.0-flash-preview-image-generation"
+    },
+    "openai_model_name": {
+        "description": "OpenAI 模型名称",
+        "type": "string",
+        "hint": "选择要使用的 OpenAI 模型，留空则使用默认模型",
+        "default": "gpt-image-1"
     },
     "figurine_style": {
         "description": "模型化风格",

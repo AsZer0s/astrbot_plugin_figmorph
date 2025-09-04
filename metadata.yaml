@@ -1,5 +1,5 @@
 name: astrbot_plugin_figmorph
 desc: 基于OpenAI接口&Gemini接口生图的图变手办
-version: v1.0.0
+version: v1.1.0
 author: AsZer0s
 repo: https://github.com/AsZer0s/astrbot_plugin_figmorph

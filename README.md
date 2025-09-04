@@ -56,7 +56,5 @@
 
 ## 🙏 致谢
 
-插件二改自作者的插件 [**zgojin**](https://github.com/zgojin/astrbot_plugin_figurine_workshop)
-
-本插件的灵感和部分代码实现来源于原作者 [**Zhalslar**](https://github.com/Zhalslar) 的优秀插件 [**astrbot_plugin_lmarena**](https://github.com/Zhalslar/astrbot_plugin_lmarena)。  
+插件二改自作者  [**zgojin**](https://github.com/zgojin/) 的插件 [**astrbot_plugin_figurine_workshop**](https://github.com/zgojin/astrbot_plugin_figurine_workshop)
 在此表示诚挚的感谢！

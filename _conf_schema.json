@@ -16,6 +16,12 @@
         "hint": "如果需要自定义 API 地址或使用代理，请填写完整 URL",
         "default": "https://generativelanguage.googleapis.com"
     },
+    "model_name": {
+        "description": "Gemini 模型名称",
+        "type": "string",
+        "hint": "选择要使用的 Gemini 模型，留空则使用默认模型",
+        "default": "gemini-2.0-flash-preview-image-generation"
+    },
     "figurine_style": {
         "description": "模型化风格",
         "type": "string",

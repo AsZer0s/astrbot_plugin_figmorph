@@ -31,6 +31,7 @@
 | `figurine_style`   | 下拉菜单 | 选择默认的生成风格，`deluxe_box`（豪华版）或 `classic`（经典版）。                                                                     |
 | `save_image`       | 开关   | 是否将每次生成的图片保存在插件的 `data` 目录中。                                                                                  |
 | `api_base_url`     | 字符串 | （可选）如果你需要使用代理，可以在此填写自定义的 API 地址。                                                                         |
+| `model_name`       | 字符串 | （可选）选择要使用的 Gemini 模型，留空则使用默认模型 `gemini-2.0-flash-preview-image-generation`。                                |
 | `prompts`          | 对象   | （高级）你可以在这里自定义 `deluxe_box` 和 `classic` 两种风格的生成提示词，以调整出图效果。                                          |
 
 
@@ -44,6 +45,8 @@
 
 
 ## 致谢
+
+插件二改自作者的插件 [**zgojin**](https://github.com/zgojin/astrbot_plugin_figurine_workshop)
 
 本插件的灵感和部分代码实现来源于原作者 [**Zhalslar**](https://github.com/Zhalslar) 的优秀插件 [**astrbot_plugin_lmarena**](https://github.com/Zhalslar/astrbot_plugin_lmarena)。
 在此表示诚挚的感谢！

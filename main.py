@@ -117,6 +117,7 @@ class LMArenaPlugin(Star):
             "api_base_url", "https://generativelanguage.googleapis.com"
         )
         self.figurine_style = self.conf.get("figurine_style", "deluxe_box")
+        self.model_name = self.conf.get("model_name", "gemini-2.0-flash-preview-image-generation")
         if not self.api_keys:
             logger.error("LMArenaPlugin: 未配置任何 Gemini API 密钥")
 
@@ -179,7 +180,7 @@ class LMArenaPlugin(Star):
         logger.info(f"Gemini 手办化 Prompt ({self.figurine_style}): {final_prompt}")
 
         async def edit_operation(api_key):
-            model_name = "gemini-2.0-flash-preview-image-generation"
+            model_name = self.model_name
             image_base64 = base64.b64encode(image_bytes).decode("utf-8")
 
             payload = {
